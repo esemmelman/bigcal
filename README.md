@@ -1,6 +1,6 @@
 # BigCal
 
-A read-only calendar for your DayFlow events, showing October 2026 through December 2027 in fifteen compact rows, with two blank lines between groups of three months. Each row begins with the abbreviated month followed by every integer date. Events appear in a floating box when you hover over or focus a date. Tap a date on a phone. Move off the date and box, or press Escape, to dismiss it.
+A calendar for your DayFlow events, showing October 2026 through December 2027 in fifteen compact rows, with two blank lines between groups of three months. Each row begins with the abbreviated month followed by every integer date. Events appear in a floating box when you hover over or focus a date. Tap a date on a phone. Click an event to view, edit, or delete it. Move off the date and box, or press Escape, to dismiss it.
 
 ## Open
 
@@ -10,7 +10,7 @@ GitHub Pages address: https://esemmelman.github.io/bigcal/ — sign in with your
 
 Run `powershell -ExecutionPolicy Bypass -File .\Start-BigCal.ps1`, or run `npm ci` and `npm run dev`, then open http://127.0.0.1:5173. Requires Node.js 20.19+ or 22.12+.
 
-Choose **Sign in** and use your existing DayFlow email and password. BigCal reads the same Supabase `tasks` table, through DayFlow's existing user ownership policies. It never changes events. Events refresh on changes, every minute, and when returning to the tab. Local-only DayFlow events must first sync in DayFlow, or use **Open DayFlow backup** to view a JSON export. Backup events remain in memory and are not uploaded to GitHub or Supabase. Inbox tasks without dates are omitted.
+Choose **Sign in** and use your existing DayFlow email and password. BigCal uses the same Supabase `tasks` table, through DayFlow's existing user ownership policies. Click a live event, then **Edit** to change its title, date, start/end time, all-day setting, or notes. **Save** writes changes back to DayFlow. **Delete** asks for confirmation before permanently deleting the event from DayFlow. Other reminder settings are preserved; changing an event to all-day disables its timed reminder. Events refresh on changes, every minute, and when returning to the tab. Local-only DayFlow events must first sync in DayFlow, or use **Open DayFlow backup** to view a JSON export. Backup events are read-only and remain in memory. Inbox tasks without dates are omitted.
 
 Sign-in is remembered in the same browser for 90 days after entering your password. Supabase refreshes the session tokens automatically; the password is never stored. After 90 days BigCal requires sign-in again. Signing out, clearing browser storage, or DayFlow server-side session revocation can require an earlier sign-in. Signing out here affects only this session.
 

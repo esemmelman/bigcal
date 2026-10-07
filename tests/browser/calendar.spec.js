@@ -45,7 +45,33 @@ test('search highlights matching dates and filters hover events by title or note
 test('clicking a hover event opens its full details and closes with keyboard or button',async({page})=>{
  await page.goto('/');await page.locator('#import').setInputFiles({name:'events.json',mimeType:'application/json',buffer:Buffer.from(JSON.stringify({tasks:[{title:'Appointment details',notes:'First line\nSecond line',date:'2026-10-07',time:'09:00',endTime:'10:00'}]}))});
  const date=page.locator('[data-date="2026-10-07"]');await date.hover();await page.locator('#date-events .event').click();
- await expect(page.locator('#event-dialog')).toBeVisible();await expect(page.locator('#event-title')).toHaveText('Appointment details');await expect(page.locator('#event-time')).toHaveText('9:00 AM – 10:00 AM');await expect(page.locator('#event-notes')).toHaveText('First line\nSecond line');await expect(page.locator('#date-events')).toBeHidden();
+ await expect(page.locator('#event-dialog')).toBeVisible();await expect(page.locator('#event-title')).toHaveText('Appointment details');await expect(page.locator('#event-time')).toHaveText('9:00 AM – 10:00 AM');await expect(page.locator('#event-notes')).toHaveText('First line\nSecond line');await expect(page.locator('#date-events')).toBeHidden();await expect(page.locator('#event-edit')).toBeHidden();await expect(page.locator('#event-delete')).toBeHidden();
  await page.locator('#event-close').click();await expect(page.locator('#event-dialog')).toBeHidden();
  await date.hover();await page.locator('#date-events .event').focus();await page.keyboard.press('Enter');await expect(page.locator('#event-dialog')).toBeVisible();await page.keyboard.press('Escape');await expect(page.locator('#event-dialog')).toBeHidden();
+});
+
+test('live edits save to the owned DayFlow event; failed saves keep fields; deletion requires confirmation',async({page})=>{
+ const user={id:'12345678-1234-1234-1234-123456789012',aud:'authenticated',role:'authenticated',email:'test@example.com',app_metadata:{},user_metadata:{},created_at:'2026-10-01T00:00:00Z'};
+ await page.addInitScript(({user})=>{localStorage.setItem('bigcal-auth',JSON.stringify({access_token:'test-access-token',refresh_token:'test-refresh-token',expires_at:Math.floor(Date.now()/1000)+3600,expires_in:3600,token_type:'bearer',user}));localStorage.setItem('bigcal-auth-deadline',String(Date.now()+90*86400000));},{user});
+ let rows=[{id:'one',title:'Original',date:'2026-10-07',start_time:'09:00:00',end_time:null,notes:'Old notes'}],fail=true,deletes=0,patches=0;
+ await page.route('**/rest/v1/tasks?**',async route=>{
+   const request=route.request(),url=new URL(request.url());
+   if(request.method()==='GET'){await route.fulfill({json:rows});return;}
+   expect(url.searchParams.get('user_id')).toBe(`eq.${user.id}`);expect(url.searchParams.get('id')).toBe('eq.one');
+   if(request.method()==='PATCH'){
+     patches++;if(fail){await route.fulfill({status:500,json:{message:'Test save failure'}});return;}
+     const changes=request.postDataJSON();expect(changes).not.toHaveProperty('reminder_minutes');expect(changes).not.toHaveProperty('color');rows=[{...rows[0],...changes}];await route.fulfill({json:[{id:'one'}]});return;
+   }
+   if(request.method()==='DELETE'){deletes++;rows=[];await route.fulfill({json:[{id:'one'}]});return;}
+ });
+ await page.goto('/');await expect(page.locator('#account')).toHaveText('Sign out');
+ await page.locator('[data-date="2026-10-07"]').hover();await page.locator('#date-events .event').click();await page.locator('#event-edit').click();
+ await page.locator('#edit-title').fill('Changed');await page.locator('#edit-date').fill('2026-10-08');await page.locator('#edit-notes').fill('New notes');await page.locator('#event-save').click();
+ await expect(page.locator('#event-error')).toContainText('Test save failure');await expect(page.locator('#edit-title')).toHaveValue('Changed');await expect(page.locator('#event-dialog')).toBeVisible();fail=false;
+ await page.locator('#edit-allday').check();await page.locator('#event-save').click();await expect(page.locator('#event-dialog')).toBeHidden();
+ expect(rows[0].reminder_enabled).toBe(false);expect(rows[0].start_time).toBeNull();expect(patches).toBe(2);
+ await page.locator('[data-date="2026-10-08"]').hover();await expect(page.locator('#date-events')).toContainText('Changed');await page.locator('#date-events .event').click();await page.locator('#event-delete').click();
+ await expect(page.locator('#event-confirm')).toBeVisible();expect(deletes).toBe(0);await page.locator('#delete-cancel').click();expect(deletes).toBe(0);
+ await page.locator('#event-delete').click();await page.locator('#delete-confirm').click();await expect(page.locator('#event-dialog')).toBeHidden();expect(deletes).toBe(1);
+ await page.locator('[data-date="2026-10-08"]').hover();await expect(page.locator('#date-events')).toContainText('No events.');
 });
