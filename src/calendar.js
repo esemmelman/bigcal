@@ -6,8 +6,8 @@ export function normalizeDate(value) {
   const [y,m,d]=value.split('-').map(Number), date=new Date(y,m-1,d);
   return date.getFullYear()===y && date.getMonth()===m-1 && date.getDate()===d ? dateKey(date) : null;
 }
-export function monthsAhead(now=new Date()) {
-  return Array.from({length:12},(_,i)=>{
+export function monthsAhead(now=new Date(),count=12) {
+  return Array.from({length:count},(_,i)=>{
     const start=new Date(now.getFullYear(),now.getMonth()+i,1);
     return {start,label:start.toLocaleDateString('en-US',{month:'short'}),year:start.getFullYear(),days:Array.from({length:new Date(start.getFullYear(),start.getMonth()+1,0).getDate()},(_,d)=>new Date(start.getFullYear(),start.getMonth(),d+1))};
   });

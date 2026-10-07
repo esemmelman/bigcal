@@ -1,6 +1,6 @@
 # BigCal
 
-A read-only, rolling twelve-month calendar for your DayFlow events. Starts with the current month on your device, then shows eleven more months. Each row begins with the abbreviated month and year, followed by every integer date. Day cells wrap event titles and rows grow with their busiest day. Scroll horizontally to reach all dates; the month label stays visible.
+A read-only calendar for your DayFlow events, showing October through December 2027 in three compact rows. Each row begins with the abbreviated month followed by every integer date. Events appear in a floating box when you hover over or focus a date. Tap a date on a phone. Move off the date and box, or press Escape, to dismiss it.
 
 ## Open
 
@@ -10,7 +10,7 @@ Run `powershell -ExecutionPolicy Bypass -File .\Start-BigCal.ps1`, or run `npm c
 
 Choose **Sign in** and use your existing DayFlow email and password. BigCal reads the same Supabase `tasks` table, through DayFlow's existing user ownership policies. It never changes events. Events refresh on changes, every minute, and when returning to the tab. Local-only DayFlow events must first sync in DayFlow, or use **Open DayFlow backup** to view a JSON export. Backup events remain in memory and are not uploaded to GitHub or Supabase. Inbox tasks without dates are omitted.
 
-Use **Day width** for more space. Click an event with notes to expand its details. A signed-in session is remembered by Supabase in this browser; **Sign out** clears it.
+Sign-in is remembered in the same browser for 90 days after entering your password. Supabase refreshes the session tokens automatically; the password is never stored. After 90 days BigCal requires sign-in again. Signing out, clearing browser storage, or DayFlow server-side session revocation can require an earlier sign-in. Signing out here affects only this session.
 
 ## GitHub automatic pushes
 
