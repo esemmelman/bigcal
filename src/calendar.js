@@ -1,6 +1,14 @@
 export function dateKey(date) {
   return `${date.getFullYear()}-${String(date.getMonth()+1).padStart(2,'0')}-${String(date.getDate()).padStart(2,'0')}`;
 }
+export function daysFromToday(date,now=new Date()) {
+  const dayNumber=value=>Date.UTC(value.getFullYear(),value.getMonth(),value.getDate())/86400000;
+  return dayNumber(date)-dayNumber(now);
+}
+export function dayOffsetLabel(date,now=new Date()) {
+  const days=daysFromToday(date,now),count=Math.abs(days);
+  return days===0?'Today · 0 days from today':`${count} ${count===1?'day':'days'} ${days>0?'from today':'ago'}`;
+}
 export function normalizeDate(value) {
   if(typeof value !== 'string' || !/^\d{4}-\d{1,2}-\d{1,2}$/.test(value)) return null;
   const [y,m,d]=value.split('-').map(Number), date=new Date(y,m-1,d);

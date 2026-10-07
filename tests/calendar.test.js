@@ -1,6 +1,13 @@
 import {test} from 'node:test';
 import assert from 'node:assert/strict';
-import {monthsAhead,normalizeDate,groupEvents,readEvents} from '../src/calendar.js';
+import {monthsAhead,normalizeDate,groupEvents,readEvents,daysFromToday,dayOffsetLabel} from '../src/calendar.js';
+test('day offsets count calendar days across daylight saving and year boundaries',()=>{
+ assert.equal(daysFromToday(new Date(2027,2,15),new Date(2027,2,13,23,59)),2);
+ assert.equal(daysFromToday(new Date(2027,0,1),new Date(2026,11,31,23)),1);
+ assert.equal(dayOffsetLabel(new Date(2026,9,7),new Date(2026,9,7,23)),'Today · 0 days from today');
+ assert.equal(dayOffsetLabel(new Date(2026,9,6),new Date(2026,9,7)),'1 day ago');
+ assert.equal(dayOffsetLabel(new Date(2026,9,9),new Date(2026,9,7)),'2 days from today');
+});
 test('requested range includes all fifteen months through December 2027',()=>{
  const months=monthsAhead(new Date(2026,9,1),15);assert.equal(months.length,15);assert.equal(months[0].year,2026);assert.equal(months.at(-1).year,2027);assert.equal(months.at(-1).label,'Dec');
 });

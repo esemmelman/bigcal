@@ -1,6 +1,6 @@
 import {createClient} from '@supabase/supabase-js';
 import {config} from './config.js';
-import {dateKey,monthsAhead,groupEvents,timeLabel,readEvents} from './calendar.js';
+import {dateKey,monthsAhead,groupEvents,timeLabel,readEvents,dayOffsetLabel} from './calendar.js';
 import {SESSION_KEY,sessionStorage} from './session.js';
 import './style.css';
 const $=id=>document.getElementById(id),storage=sessionStorage(localStorage);
@@ -11,7 +11,7 @@ function status(text){$('status').textContent=text;$('status').hidden=!text;}
 function hideEvents(){clearTimeout(hideTimer);$('date-events').hidden=true;activeDate?.removeAttribute('aria-describedby');activeDate=null;}
 function showEvents(button,date,dayEvents){
   clearTimeout(hideTimer);hideEvents();activeDate=button;button.setAttribute('aria-describedby','date-events');
-  const box=$('date-events');box.replaceChildren();const heading=document.createElement('strong');heading.textContent=date.toLocaleDateString('en-US',{weekday:'long',month:'long',day:'numeric',year:'numeric'});box.append(heading);
+  const box=$('date-events');box.replaceChildren();const heading=document.createElement('strong');heading.textContent=`${date.toLocaleDateString('en-US',{weekday:'long',month:'long',day:'numeric',year:'numeric'})} · ${dayOffsetLabel(date)}`;box.append(heading);
   if(!dayEvents.length){const empty=document.createElement('p');empty.textContent=user||imported?'No events.':'Sign in to see DayFlow events.';box.append(empty);}
   for(const event of dayEvents){
     const item=document.createElement('div');item.className='event';
