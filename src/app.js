@@ -9,12 +9,23 @@ const months=monthsAhead(new Date(2026,9,1),15);
 let events=[],user=null,channel=null,generation=0,imported=false,refreshTimer,activeDate=null,hideTimer;
 function status(text){$('status').textContent=text;$('status').hidden=!text;}
 function hideEvents(){clearTimeout(hideTimer);$('date-events').hidden=true;activeDate?.removeAttribute('aria-describedby');activeDate=null;}
+let eventReturnDate=null;
+function openEvent(event,date){
+  eventReturnDate=activeDate;
+  $('event-title').textContent=event.title;
+  $('event-date').textContent=`${date.toLocaleDateString('en-US',{weekday:'long',month:'long',day:'numeric',year:'numeric'})} · ${dayOffsetLabel(date)}`;
+  $('event-time').textContent=timeLabel(event.time)+(event.endTime?` – ${timeLabel(event.endTime)}`:'');
+  $('event-notes').textContent=event.notes||'No notes.';
+  hideEvents();$('event-dialog').showModal();$('event-close').focus();
+}
+$('event-close').onclick=()=>$('event-dialog').close();
+$('event-dialog').addEventListener('close',()=>{eventReturnDate?.focus();hideEvents();eventReturnDate=null;});
 function showEvents(button,date,dayEvents){
   clearTimeout(hideTimer);hideEvents();activeDate=button;button.setAttribute('aria-describedby','date-events');
   const box=$('date-events');box.replaceChildren();const heading=document.createElement('strong');heading.textContent=`${date.toLocaleDateString('en-US',{weekday:'long',month:'long',day:'numeric',year:'numeric'})} · ${dayOffsetLabel(date)}`;box.append(heading);
   if(!dayEvents.length){const empty=document.createElement('p');empty.textContent=user||imported?'No events.':'Sign in to see DayFlow events.';box.append(empty);}
   for(const event of dayEvents){
-    const item=document.createElement('div');item.className='event';
+    const item=document.createElement('button');item.type='button';item.className='event';item.setAttribute('aria-haspopup','dialog');item.onclick=()=>openEvent(event,date);
     const time=document.createElement('time');time.textContent=timeLabel(event.time)+(event.endTime?` – ${timeLabel(event.endTime)}`:'');
     const title=document.createElement('div');title.textContent=event.title;item.append(time,title);
     if(event.notes){const notes=document.createElement('p');notes.textContent=event.notes;item.append(notes);}box.append(item);
@@ -27,6 +38,8 @@ function showEvents(button,date,dayEvents){
 }
 function delayedHide(){hideTimer=setTimeout(hideEvents,150);}
 $('date-events').onmouseenter=()=>clearTimeout(hideTimer);$('date-events').onmouseleave=delayedHide;
+$('date-events').addEventListener('focusin',()=>clearTimeout(hideTimer));
+$('date-events').addEventListener('focusout',event=>{if(!$('date-events').contains(event.relatedTarget))delayedHide();});
 function render(){
   hideEvents();const query=$('search').value.trim().toLocaleLowerCase();
   const matches=events.filter(event=>!query||`${event.title} ${event.notes||''}`.toLocaleLowerCase().includes(query));
