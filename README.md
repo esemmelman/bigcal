@@ -4,6 +4,8 @@ A read-only, rolling twelve-month calendar for your DayFlow events. Starts with 
 
 ## Open
 
+Online: https://bigcal.esemmoc.chatgpt.site — sign in with your DayFlow account. The page is internet accessible; events are visible only after signing in. The GitHub repository remains private. GitHub automatic pushes save source changes; publishing a new hosted version is a separate operation.
+
 Run `powershell -ExecutionPolicy Bypass -File .\Start-BigCal.ps1`, or run `npm ci` and `npm run dev`, then open http://127.0.0.1:5173. Requires Node.js 20.19+ or 22.12+.
 
 Choose **Sign in** and use your existing DayFlow email and password. BigCal reads the same Supabase `tasks` table, through DayFlow's existing user ownership policies. It never changes events. Events refresh on changes, every minute, and when returning to the tab. Local-only DayFlow events must first sync in DayFlow, or use **Open DayFlow backup** to view a JSON export. Backup events remain in memory and are not uploaded to GitHub or Supabase. Inbox tasks without dates are omitted.
