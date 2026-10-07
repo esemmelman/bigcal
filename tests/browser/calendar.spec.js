@@ -26,8 +26,18 @@ test('signed-in DayFlow events load for October 2026 and December 2027',async({p
    const url=new URL(route.request().url());expect(url.searchParams.getAll('date')).toEqual(['gte.2026-10-01','lt.2028-01-01']);expect(url.searchParams.get('user_id')).toBe(`eq.${user.id}`);reads++;
    await route.fulfill({json:[{id:'one',title:'October DayFlow appointment',date:'2026-10-07',start_time:'09:00:00',notes:''},{id:'two',title:'December DayFlow appointment',date:'2027-12-31',start_time:null,notes:''}]});
  });
- await page.goto('/');await expect(page.locator('#account')).toHaveText('Sign out');await expect(page.locator('#status')).toContainText('2 events');
+ await page.goto('/');await expect(page.locator('#account')).toHaveText('Sign out');await expect(page.locator('#status')).toBeHidden();
  await page.locator('[data-date="2026-10-07"]').hover();await expect(page.locator('#date-events')).toContainText('October DayFlow appointment');
  await page.locator('[data-date="2027-12-31"]').hover();await expect(page.locator('#date-events')).toContainText('December DayFlow appointment');
- await page.reload();await expect(page.locator('#status')).toContainText('2 events');expect(reads).toBeGreaterThanOrEqual(2);
+ await page.reload();await expect(page.locator('#account')).toHaveText('Sign out');await page.locator('[data-date="2026-10-07"]').hover();await expect(page.locator('#date-events')).toContainText('October DayFlow appointment');expect(reads).toBeGreaterThanOrEqual(2);
+});
+
+test('search highlights matching dates and filters hover events by title or notes',async({page})=>{
+ await page.goto('/');await page.locator('#import').setInputFiles({name:'events.json',mimeType:'application/json',buffer:Buffer.from(JSON.stringify({tasks:[{title:'Dentist',notes:'Bring insurance',date:'2026-10-07'},{title:'Lunch',date:'2026-10-07'},{title:'DENTIST follow-up',date:'2027-12-31'}]}))});
+ await expect(page.locator('#status')).toBeHidden();await expect(page.locator('.hint')).toHaveCount(0);
+ await page.locator('#search').fill('dentist');await expect(page.locator('.search-match')).toHaveCount(2);await expect(page.locator('#search-status')).toHaveText('2 matching events');
+ await page.locator('[data-date="2026-10-07"]').hover();await expect(page.locator('#date-events')).toContainText('Dentist');await expect(page.locator('#date-events')).not.toContainText('Lunch');
+ await page.locator('#search').fill('insurance');await expect(page.locator('.search-match')).toHaveCount(1);
+ await page.locator('#search').fill('no-such-event');await expect(page.locator('#search-status')).toHaveText('0 matching events');
+ await page.locator('#search').fill('');await expect(page.locator('.search-dim')).toHaveCount(0);await page.locator('[data-date="2026-10-07"]').hover();await expect(page.locator('#date-events')).toContainText('Lunch');
 });
