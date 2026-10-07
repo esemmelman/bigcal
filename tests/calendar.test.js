@@ -1,6 +1,9 @@
 import {test} from 'node:test';
 import assert from 'node:assert/strict';
 import {monthsAhead,normalizeDate,groupEvents,readEvents} from '../src/calendar.js';
+test('requested range includes all fifteen months through December 2027',()=>{
+ const months=monthsAhead(new Date(2026,9,1),15);assert.equal(months.length,15);assert.equal(months[0].year,2026);assert.equal(months.at(-1).year,2027);assert.equal(months.at(-1).label,'Dec');
+});
 test('twelve months cross the year and include leap day',()=>{
  const months=monthsAhead(new Date(2027,9,7));assert.equal(months.length,12);assert.equal(months[0].label,'Oct');assert.equal(months.at(-1).label,'Sep');assert.equal(months.at(-1).year,2028);assert.equal(months[4].days.length,29);
 });

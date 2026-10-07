@@ -1,6 +1,6 @@
 # BigCal
 
-A read-only calendar for your DayFlow events, showing October through December 2027 in three compact rows. Each row begins with the abbreviated month followed by every integer date. Events appear in a floating box when you hover over or focus a date. Tap a date on a phone. Move off the date and box, or press Escape, to dismiss it.
+A read-only calendar for your DayFlow events, showing October 2026 through December 2027 in fifteen compact rows, with two blank lines between groups of three months. Each row begins with the abbreviated month followed by every integer date. Events appear in a floating box when you hover over or focus a date. Tap a date on a phone. Move off the date and box, or press Escape, to dismiss it.
 
 ## Open
 

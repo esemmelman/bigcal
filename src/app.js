@@ -5,7 +5,7 @@ import {SESSION_KEY,sessionStorage} from './session.js';
 import './style.css';
 const $=id=>document.getElementById(id),storage=sessionStorage(localStorage);
 const client=createClient(config.url,config.publishableKey,{auth:{storageKey:SESSION_KEY,storage,persistSession:true,autoRefreshToken:true}});
-const months=monthsAhead(new Date(2027,9,1),3);
+const months=monthsAhead(new Date(2026,9,1),15);
 let events=[],user=null,channel=null,generation=0,imported=false,refreshTimer,activeDate=null,hideTimer;
 function status(text){$('status').textContent=text;}
 function hideEvents(){clearTimeout(hideTimer);$('date-events').hidden=true;activeDate?.removeAttribute('aria-describedby');activeDate=null;}
@@ -29,10 +29,11 @@ function delayedHide(){hideTimer=setTimeout(hideEvents,150);}
 $('date-events').onmouseenter=()=>clearTimeout(hideTimer);$('date-events').onmouseleave=delayedHide;
 function render(){
   hideEvents();const groups=groupEvents(events),today=dateKey(new Date()),fragment=document.createDocumentFragment();
-  $('range').textContent='October – December 2027';
-  for(const month of months){
+  $('range').textContent="Oct. '26 – Dec. '27";
+  for(const [index,month] of months.entries()){
     const row=document.createElement('section');row.className='month';row.setAttribute('aria-label',`${month.label} ${month.year}`);
-    const heading=document.createElement('h2');heading.className='month-heading';heading.textContent=`${month.label}.`;row.append(heading);
+    if((index+1)%3===0&&index<months.length-1)row.classList.add('quarter-end');
+    const heading=document.createElement('h2');heading.className='month-heading';heading.textContent=`${month.label}.`;heading.title=String(month.year);row.append(heading);
     for(const date of month.days){
       const key=dateKey(date),button=document.createElement('button'),dayEvents=groups.get(key)||[];button.type='button';button.className='day';button.dataset.date=key;button.textContent=date.getDate();
       button.setAttribute('aria-label',date.toLocaleDateString('en-US',{month:'long',day:'numeric',year:'numeric'}));
@@ -50,7 +51,7 @@ async function checkExpiry(){
 async function refresh(){
   if(await checkExpiry()||!user||imported)return;
   const id=++generation,currentUser=user;status('Loading DayFlow events…');
-  try{const data=await readEvents(client,currentUser.id,months);if(id!==generation)return;events=data;render();status(`${events.length} events · Updated ${new Date().toLocaleTimeString([],{hour:'numeric',minute:'2-digit'})}`);}
+  try{const data=await readEvents(client,currentUser.id,months);if(id!==generation)return;events=data;render();status(events.length?`${events.length} events · Updated ${new Date().toLocaleTimeString([],{hour:'numeric',minute:'2-digit'})}`:'No DayFlow events found for Oct. 2026 – Dec. 2027. Check that DayFlow is synced to this same account, or open a backup.');}
   catch(error){if(id===generation)status(`Could not load events: ${error.message}. Choose Refresh to retry.`);}
 }
 async function applySession(session){
