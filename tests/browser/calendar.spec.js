@@ -11,7 +11,7 @@ test('compact fifteen month rows show events only in a hover box, with keyboard 
  expect(await page.locator('.month').first().evaluate(e=>e.getBoundingClientRect().height)).toBeLessThan(35);
  await page.screenshot({path:'test-results/bigcal-hover.png'});await page.mouse.move(5,5);await expect(page.locator('#date-events')).toBeHidden();
  await date.focus();await expect(page.locator('#date-events')).toBeVisible();await page.keyboard.press('Escape');await expect(page.locator('#date-events')).toBeHidden();
- await page.screenshot({path:'test-results/bigcal-compact.png'});await page.setViewportSize({width:390,height:844});await date.click();await expect(page.locator('#date-events')).toBeVisible();
+ await page.screenshot({path:'test-results/bigcal-compact.png'});await page.setViewportSize({width:390,height:844});await date.hover();await expect(page.locator('#date-events')).toBeVisible();
  const box=await page.locator('#date-events').boundingBox();expect(box.x).toBeGreaterThanOrEqual(0);expect(box.x+box.width).toBeLessThanOrEqual(390);expect(errors).toEqual([]);
 });
 
@@ -77,4 +77,19 @@ test('live edits save to the owned DayFlow event; failed saves keep fields; dele
  await expect(page.locator('#event-confirm')).toBeVisible();expect(deletes).toBe(0);await page.locator('#delete-cancel').click();expect(deletes).toBe(0);
  await page.locator('#event-delete').click();await page.locator('#delete-confirm').click();await expect(page.locator('#event-dialog')).toBeHidden();expect(deletes).toBe(1);
  await page.locator('[data-date="2026-10-08"]').hover();await expect(page.locator('#date-events')).toContainText('No events.');
+});
+
+test('clicking a date opens a prefilled add form and saves a new DayFlow event',async({page})=>{
+ const user={id:'12345678-1234-1234-1234-123456789012',aud:'authenticated',role:'authenticated',email:'test@example.com',app_metadata:{},user_metadata:{},created_at:'2026-10-01T00:00:00Z'};
+ await page.addInitScript(({user})=>{localStorage.setItem('bigcal-auth',JSON.stringify({access_token:'test-access-token',refresh_token:'test-refresh-token',expires_at:Math.floor(Date.now()/1000)+3600,expires_in:3600,token_type:'bearer',user}));localStorage.setItem('bigcal-auth-deadline',String(Date.now()+90*86400000));},{user});
+ let rows=[],inserts=0;
+ await page.route('**/rest/v1/tasks?**',async route=>{
+   if(route.request().method()==='POST'){const row=route.request().postDataJSON();expect(row.user_id).toBe(user.id);expect(row.date).toBe('2026-10-08');expect(row.title).toBe('New appointment');expect(row.start_time).toBe('09:30');expect(row.id).toBeTruthy();inserts++;rows=[row];await route.fulfill({json:[{id:row.id}]});}
+   else await route.fulfill({json:rows});
+ });
+ await page.goto('/');await expect(page.locator('#account')).toHaveText('Sign out');await page.locator('[data-date="2026-10-08"]').click();
+ await expect(page.locator('#event-title')).toHaveText('Add event');await expect(page.locator('#edit-date')).toHaveValue('2026-10-08');await expect(page.locator('#event-delete')).toBeHidden();
+ await page.locator('#edit-cancel').click();expect(inserts).toBe(0);
+ await page.locator('[data-date="2026-10-08"]').click();await page.locator('#edit-title').fill('New appointment');await page.locator('#edit-allday').uncheck();await page.locator('#edit-start').fill('09:30');await page.locator('#event-save').click();
+ await expect(page.locator('#event-dialog')).toBeHidden();expect(inserts).toBe(1);await page.locator('[data-date="2026-10-08"]').hover();await expect(page.locator('#date-events')).toContainText('New appointment');
 });

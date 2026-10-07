@@ -6,6 +6,8 @@ A calendar for your DayFlow events, showing October 2026 through December 2027 i
 
 Use **Search events** to search titles and notes. Matching dates are highlighted, and hovering over one shows only its matching events. Clear the search to show all events again.
 
+Click a date to open **Add event** with that date selected. Enter a title and notes, choose all-day or a start/end time, then **Save** to add it to your signed-in DayFlow account.
+
 GitHub Pages address: https://esemmelman.github.io/bigcal/ — sign in with your DayFlow account. Events are visible only after signing in. The `Publish GitHub Pages` workflow tests, builds, and publishes the page whenever changes are pushed to `main`, after Pages hosting is enabled in repository settings.
 
 Run `powershell -ExecutionPolicy Bypass -File .\Start-BigCal.ps1`, or run `npm ci` and `npm run dev`, then open http://127.0.0.1:5173. Requires Node.js 20.19+ or 22.12+.

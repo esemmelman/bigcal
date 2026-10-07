@@ -9,7 +9,7 @@ const months=monthsAhead(new Date(2026,9,1),15);
 let events=[],user=null,channel=null,generation=0,imported=false,refreshTimer,activeDate=null,hideTimer;
 function status(text){$('status').textContent=text;$('status').hidden=!text;}
 function hideEvents(){clearTimeout(hideTimer);$('date-events').hidden=true;activeDate?.removeAttribute('aria-describedby');activeDate=null;}
-let eventReturnDate=null,selectedEvent=null,mutating=false;
+let eventReturnDate=null,selectedEvent=null,mutating=false,creating=false;
 function resetEditor(){
   $('event-form').hidden=true;$('event-details').hidden=false;$('event-error').textContent='';
   $('event-confirm').hidden=true;$('delete-confirm').hidden=true;$('delete-cancel').hidden=true;
@@ -22,7 +22,7 @@ function setBusy(value){
 }
 function editingTimes(){const allDay=$('edit-allday').checked;$('edit-times').hidden=allDay;$('edit-start').required=!allDay;}
 function openEvent(event,date){
-  selectedEvent=event;resetEditor();
+  creating=false;$('event-save').disabled=false;selectedEvent=event;resetEditor();
   eventReturnDate=activeDate;
   $('event-title').textContent=event.title;
   $('event-date').textContent=`${date.toLocaleDateString('en-US',{weekday:'long',month:'long',day:'numeric',year:'numeric'})} · ${dayOffsetLabel(date)}`;
@@ -32,21 +32,28 @@ function openEvent(event,date){
 }
 $('event-close').onclick=()=>$('event-dialog').close();
 $('event-dialog').addEventListener('cancel',event=>{if(mutating)event.preventDefault();});
-$('event-dialog').addEventListener('close',()=>{eventReturnDate?.focus();hideEvents();eventReturnDate=null;selectedEvent=null;});
+$('event-dialog').addEventListener('close',()=>{eventReturnDate?.focus();hideEvents();eventReturnDate=null;selectedEvent=null;creating=false;});
 $('event-edit').onclick=()=>{
   $('edit-title').value=selectedEvent.title;$('edit-date').value=selectedEvent.date;
   $('edit-start').value=selectedEvent.time?.slice(0,5)||'';$('edit-end').value=selectedEvent.endTime?.slice(0,5)||'';
   $('edit-allday').checked=!selectedEvent.time;$('edit-notes').value=selectedEvent.notes||'';editingTimes();
   $('event-form').hidden=false;$('event-details').hidden=true;$('event-edit').hidden=true;$('event-delete').hidden=true;$('event-error').textContent='';$('edit-title').focus();
 };
+function addEvent(button,date){
+  creating=true;selectedEvent={id:crypto.randomUUID(),title:'',date:dateKey(date),time:null,notes:''};
+  eventReturnDate=button;resetEditor();$('event-title').textContent='Add event';
+  hideEvents();$('event-dialog').showModal();$('event-edit').onclick();
+  $('event-save').disabled=!user;
+  if(!user)$('event-error').textContent='Sign in to your DayFlow account before adding an event.';
+}
 $('edit-allday').onchange=editingTimes;
-$('edit-cancel').onclick=resetEditor;
+$('edit-cancel').onclick=()=>{if(creating)$('event-dialog').close();else resetEditor();};
 $('event-delete').onclick=()=>{$('event-confirm').hidden=false;$('delete-confirm').hidden=false;$('delete-cancel').hidden=false;$('event-edit').hidden=true;$('event-delete').hidden=true;$('delete-confirm').focus();};
 $('delete-cancel').onclick=resetEditor;
 async function writeEvent(remove=false){
   if(mutating)return;
   $('event-error').textContent='';
-  if(!user||imported||selectedEvent?.id==null){$('event-error').textContent='Sign in and open a live DayFlow event to make changes.';return;}
+  if(!user||(imported&&!creating)||selectedEvent?.id==null){$('event-error').textContent='Sign in and open a live DayFlow event to make changes.';return;}
   if(await checkExpiry())return;
   const eventId=selectedEvent.id,userId=user.id,allDay=$('edit-allday').checked;
   const title=$('edit-title').value.trim(),start=allDay?null:$('edit-start').value,end=allDay?null:($('edit-end').value||null);
@@ -58,10 +65,10 @@ async function writeEvent(remove=false){
     if(!remove){if(allDay)changes.reminder_enabled=false;
       if(changes.date!==selectedEvent.date||start!==selectedEvent.time?.slice(0,5))changes.timezone=Intl.DateTimeFormat().resolvedOptions().timeZone;
     }
-    const query=remove?client.from('tasks').delete():client.from('tasks').update(changes);
-    const {data,error}=await query.eq('user_id',userId).eq('id',eventId).select('id');
+    const query=creating?client.from('tasks').insert({...changes,id:eventId,user_id:userId,timezone:Intl.DateTimeFormat().resolvedOptions().timeZone}):remove?client.from('tasks').delete():client.from('tasks').update(changes);
+    const {data,error}=await (creating?query:query.eq('user_id',userId).eq('id',eventId)).select('id');
     if(error)throw error;if(data?.length!==1)throw new Error('This event is no longer available or could not be changed. Refresh and try again.');
-    ++generation;setBusy(false);$('event-dialog').close();await refresh();
+    ++generation;if(creating)imported=false;setBusy(false);$('event-dialog').close();await refresh();
   }catch(error){$('event-error').textContent=`Could not ${remove?'delete':'save'} event: ${error.message}`;}
   finally{setBusy(false);}
 }
@@ -104,7 +111,7 @@ function render(){
       if(query){button.classList.add(dayEvents.length?'search-match':'search-dim');matchCount+=dayEvents.length;}
       button.onmouseenter=()=>showEvents(button,date,dayEvents);button.onmouseleave=delayedHide;
       button.onfocus=()=>showEvents(button,date,dayEvents);button.onblur=delayedHide;
-      button.onclick=()=>showEvents(button,date,dayEvents);row.append(button);
+      button.onclick=()=>addEvent(button,date);row.append(button);
     }fragment.append(row);
   }$('calendar').replaceChildren(fragment);
   $('search-status').textContent=query?`${matchCount} matching ${matchCount===1?'event':'events'}`:'';
