@@ -12,13 +12,11 @@ Choose **Sign in** and use your existing DayFlow email and password. BigCal read
 
 Sign-in is remembered in the same browser for 90 days after entering your password. Supabase refreshes the session tokens automatically; the password is never stored. After 90 days BigCal requires sign-in again. Signing out, clearing browser storage, or DayFlow server-side session revocation can require an earlier sign-in. Signing out here affects only this session.
 
-## GitHub automatic pushes
+## GitHub updates
 
-The Windows scheduled task **BigCal GitHub Auto Push** runs every five minutes while you are signed in. It tests and builds tracked changes, commits them, and pushes to `main`. New files must be explicitly added with `git add path/to/file` first. Personal backups, credentials, build outputs, and dependencies are excluded. The sync never force pushes or resolves conflicts automatically. View failures in Windows Task Scheduler (Last Run Result).
+The Windows automatic push task has been removed to stop recurring command-window flashes. GitHub Pages still publishes automatically whenever source changes are pushed to `main`. The website and live DayFlow event updates work without a Windows scheduled task.
 
-Install/reinstall: `powershell -ExecutionPolicy Bypass -File .\scripts\Enable-AutoPush.ps1`.
-Run immediately: `powershell -ExecutionPolicy Bypass -File .\scripts\Sync-GitHub.ps1`.
-Disable: `Disable-ScheduledTask -TaskName 'BigCal GitHub Auto Push'`.
+To manually test, build, commit, and push tracked source changes: `powershell -ExecutionPolicy Bypass -File .\scripts\Sync-GitHub.ps1`. New files must be explicitly added with `git add path/to/file` first. The script never force pushes.
 
 ## Checks
 
