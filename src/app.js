@@ -77,11 +77,11 @@ function showEvents(button,date,dayEvents){
     const title=document.createElement('div');title.textContent=event.title;item.append(time,title);
     if(event.notes){const notes=document.createElement('p');notes.textContent=event.notes;item.append(notes);}box.append(item);
   }
-  const rect=button.getBoundingClientRect(),below=innerHeight-rect.bottom-16,above=rect.top-16;
+  const rect=button.getBoundingClientRect(),below=innerHeight-rect.bottom-8,above=rect.top-8;
   const useBelow=below>=120||below>=above;box.style.maxHeight=`${Math.max(50,useBelow?below:above)}px`;
   box.hidden=false;
   box.style.left=`${Math.max(8,Math.min(rect.left,innerWidth-box.offsetWidth-8))}px`;
-  box.style.top=`${useBelow?rect.bottom+8:Math.max(8,rect.top-box.offsetHeight-8)}px`;
+  box.style.top=`${useBelow?rect.bottom:Math.max(8,rect.top-box.offsetHeight)}px`;
 }
 function delayedHide(){hideTimer=setTimeout(hideEvents,150);}
 $('date-events').onmouseenter=()=>clearTimeout(hideTimer);$('date-events').onmouseleave=delayedHide;

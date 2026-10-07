@@ -44,7 +44,10 @@ test('search highlights matching dates and filters hover events by title or note
 
 test('clicking a hover event opens its full details and closes with keyboard or button',async({page})=>{
  await page.goto('/');await page.locator('#import').setInputFiles({name:'events.json',mimeType:'application/json',buffer:Buffer.from(JSON.stringify({tasks:[{title:'Appointment details',notes:'First line\nSecond line',date:'2026-10-07',time:'09:00',endTime:'10:00'}]}))});
- const date=page.locator('[data-date="2026-10-07"]');await date.hover();await page.locator('#date-events .event').click();
+ const date=page.locator('[data-date="2026-10-07"]');await date.hover();
+ const dateRect=await date.boundingBox(),boxRect=await page.locator('#date-events').boundingBox();expect(boxRect.y).toBeCloseTo(dateRect.y+dateRect.height,1);
+ await page.mouse.move(dateRect.x+dateRect.width/2,boxRect.y+5,{steps:10});await expect(page.locator('#date-events')).toContainText('Appointment details');
+ await page.locator('#date-events .event').click();
  await expect(page.locator('#event-dialog')).toBeVisible();await expect(page.locator('#event-title')).toHaveText('Appointment details');await expect(page.locator('#event-time')).toHaveText('9:00 AM – 10:00 AM');await expect(page.locator('#event-notes')).toHaveText('First line\nSecond line');await expect(page.locator('#date-events')).toBeHidden();await expect(page.locator('#event-edit')).toBeHidden();await expect(page.locator('#event-delete')).toBeHidden();
  await page.locator('#event-close').click();await expect(page.locator('#event-dialog')).toBeHidden();
  await date.hover();await page.locator('#date-events .event').focus();await page.keyboard.press('Enter');await expect(page.locator('#event-dialog')).toBeVisible();await page.keyboard.press('Escape');await expect(page.locator('#event-dialog')).toBeHidden();
